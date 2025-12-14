@@ -1,7 +1,8 @@
-# 1. Use Debian-based Node image (has apt-get)
-FROM node:18-bullseye
+# Base OS + Node (REQUIRED by n8n)
+FROM node:20-bookworm
 
-# 2. Install system dependencies
+# Install system tools
+USER root
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
@@ -12,27 +13,21 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Install open-source TTS (Piper)
+# Install Piper TTS (open-source)
 RUN pip3 install --no-cache-dir piper-tts
 
-# 4. Install n8n globally
+# Install n8n (official)
 RUN npm install -g n8n
 
-# 5. Create n8n data directory
-RUN mkdir -p /home/node/.n8n
+# Prepare n8n data dir
+RUN mkdir -p /home/node/.n8n && chown -R node:node /home/node
 
-# 6. Set permissions
-RUN useradd -ms /bin/bash node
-RUN chown -R node:node /home/node
-
-# 7. Switch to node user
+# Run as non-root
 USER node
-
-# 8. Set working directory
 WORKDIR /home/node
 
-# 9. Expose n8n port
+# n8n port
 EXPOSE 5678
 
-# 10. Start n8n
+# Start n8n
 CMD ["n8n"]
